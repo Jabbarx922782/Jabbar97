@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Data Display</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f7f9fc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background-color: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            overflow-y: auto;
+            height: 80vh;
+            border: 1px solid #ddd;
+        }
+        ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+        }
+        li {
+            background-color: #e3f2fd;
+            margin: 12px 0;
+            padding: 16px;
+            border-radius: 12px;
+            color: #0288d1;
+            font-size: 18px;
+            font-weight: 600;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            text-align: center;
+        }
+        li:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+        }
+        li:active {
+            transform: translateY(2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .dialog {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            text-align: center;
+        }
+        .dialog.active {
+            display: block;
+        }
+        .dialog .dialog-content {
+            margin-bottom: 20px;
+        }
+        .dialog button {
+            background-color: #0288d1;
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .dialog button:hover {
+            background-color: #0277bd;
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.4);
+            z-index: 999;
+        }
+        .overlay.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <ul id="listview1">
+            <!-- List items will be appended here -->
+        </ul>
+    </div>
+    <div class="overlay" id="overlay"></div>
+    <div class="dialog" id="dialog">
+        <div class="dialog-content" id="dialogContent"></div>
+        <button id="copyButton">Copy</button>
+    </div>
+
+    <script>
+        function fetchData() {
+            const url = "https://opensheet.elk.sh/1RESdsN0TrdBzUAs23oa3jL0BzlfCE5Fw_VXBe5zBxQE/1";
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const listView = document.getElementById('listview1');
+                    listView.innerHTML = '';
+
+                    data.forEach((item, index) => {
+                        if (item.firebase) {
+                            const li = document.createElement('li');
+                            li.textContent = item.firebase;
+                            li.addEventListener('click', () => {
+                                showDialog(item.firebase);
+                            });
+                            listView.appendChild(li);
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        }
+
+        function showDialog(content) {
+            const dialog = document.getElementById('dialog');
+            const overlay = document.getElementById('overlay');
+            const dialogContent = document.getElementById('dialogContent');
+            const copyButton = document.getElementById('copyButton');
+
+            dialogContent.textContent = content;
+            dialog.classList.add('active');
+            overlay.classList.add('active');
+
+            copyButton.onclick = () => {
+                navigator.clipboard.writeText(content).then(() => {
+                    alert('Copied to clipboard!');
+                    closeDialog();
+                }).catch((err) => {
+                    console.error('Failed to copy: ', err);
+                    alert('Failed to copy! Please check your browser settings.');
+                });
+            };
+        }
+
+        function closeDialog() {
+            const dialog = document.getElementById('dialog');
+            const overlay = document.getElementById('overlay');
+
+            dialog.classList.remove('active');
+            overlay.classList.remove('active');
+        }
+
+        document.getElementById('overlay').onclick = closeDialog;
+
+        // Automatically fetch data every 1 second
+        setInterval(fetchData, 1000);
+
+        // Initial data fetch when the page loads
+        document.addEventListener('DOMContentLoaded', fetchData);
+    </script>
+</body>
+</html>
